@@ -1,0 +1,8 @@
+".\Objects\STARTUP.obj",
+".\Objects\iic.obj",
+".\Objects\main.obj",
+".\Objects\display.obj",
+".\Objects\key.obj",
+".\Objects\pcf8951.obj" 
+TO ".\Objects\program" 
+PRINT(".\Listings\program.m51") RAMSIZE(256) 

@@ -1,0 +1,152 @@
+C51 COMPILER V9.54   KEY                                                                   03/27/2019 15:52:21 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN .\Objects\key.obj
+COMPILER INVOKED BY: d:\Keil_v5\C51\BIN\C51.EXE HARDWAER\key.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\FWLib;.\HARDWAER;.\USER
+                    -) DEBUG OBJECTEXTEND PRINT(.\Listings\key.lst) OBJECT(.\Objects\key.obj)
+
+line level    source
+
+   1          #include "key.h"
+   2           
+   3          sbit KEY1 = P3^0;
+   4          sbit KEY2 = P3^1;
+   5          sbit KEY3 = P3^2;
+   6          sbit KEY4 = P3^3;
+   7          
+   8          unsigned char keySta[4] = {1,1,1,1};
+   9          
+  10          /*
+  11          函数名称：key_drive(void)
+  12          参数： void
+  13          返回值： void
+  14          说明：更新key_buff[]
+  15          作者：王慧云
+  16          时间：2019.3.26
+  17          */
+  18          void key_scan()
+  19          {
+  20   1          unsigned char i;
+  21   1          static unsigned char key_suff[4] ={0xff,0xff,0xff,0xff};
+  22   1      
+  23   1          key_suff[0] = (key_suff[0] << 1) | KEY1;
+  24   1          key_suff[1] = (key_suff[1] << 1) | KEY2;
+  25   1          key_suff[2] = (key_suff[2] << 1) | KEY3;
+  26   1          key_suff[3] = (key_suff[3] << 1) | KEY4;
+  27   1          
+  28   1          for(i = 0; i < 4; i ++)
+  29   1          {
+  30   2              if((key_suff[i] & 0x0f) == 0x0f)
+  31   2              {
+  32   3                  keySta[i] = 1;
+  33   3              }
+  34   2              if((key_suff[i] & 0x0f) == 0x00)
+  35   2              {
+  36   3                  keySta[i] = 0;
+  37   3              }
+  38   2              else
+  39   2              {}
+  40   2          }
+  41   1      }
+  42          
+  43          /*
+  44          函数名称：key_drive(void)
+  45          参数： void
+  46          返回值： unsigned char res
+  47          说明：函数返回值为 S7:0xeX; S6:0xdX
+  48                                          S5:0xcX; S4: 0XbX
+  49                                          X[0,1]: 0时为第一次按下
+  50                                                          1时为第二次按下
+  51          作者：王慧云
+  52          时间：2019.3.26
+  53          */
+  54          unsigned char key_drive(void)
+C51 COMPILER V9.54   KEY                                                                   03/27/2019 15:52:21 PAGE 2   
+
+  55          {
+  56   1          unsigned char i, res;
+  57   1              static unsigned char flag_s7 = 0; //S7反转标志
+  58   1              static unsigned char flag_s6 = 0; //S6反转标志
+  59   1              static unsigned char flag_s5 = 0; //S5反转标志
+  60   1              static unsigned char flag_s4 = 0; //S4反转标志
+  61   1          static unsigned char backup[4] = {1,1,1,1};
+  62   1          for(i = 0; i < 4; i ++)
+  63   1          {
+  64   2                      if(backup[i] != keySta[i])
+  65   2                      {
+  66   3                              if(backup[i] != 0)
+  67   3                              {
+  68   4                                      switch(i)
+  69   4                                      {
+  70   5                                              case 0: 
+  71   5                                                      flag_s7 = flag_s7 + 1;
+  72   5                                                      flag_s7 &= 0x01;
+  73   5                                                      if(0 == flag_s7)
+  74   5                                                      {
+  75   6                                                              res = 0xe0; //s7第一次按下的返回值
+  76   6                                                      }
+  77   5                                                      else if(1 == flag_s7)
+  78   5                                                      {
+  79   6                                                              res = 0xe1; //s7第二次按下的返回值
+  80   6                                                      } break;
+  81   5                                                      
+  82   5                                              case 1: 
+  83   5                                                      ++ flag_s6 ;
+  84   5                                                      flag_s6 &= 0x01;
+  85   5                                                      if(0 == flag_s6)
+  86   5                                                      {
+  87   6                                                              res = 0xd0; //s6第一次按下的返回值
+  88   6                                                      }
+  89   5                                                      else if(1 == flag_s6)
+  90   5                                                      {
+  91   6                                                              res = 0xd1; //s6第二次按下的返回值
+  92   6                                                      } break;
+  93   5      
+  94   5                                              case 2: 
+  95   5                                                      ++ flag_s5;
+  96   5                                                      flag_s5 &= 0x01;
+  97   5                                                      if(0 == flag_s5)
+  98   5                                                      {
+  99   6                                                              res = 0xc0; //s5第一次按下的返回值
+ 100   6                                                      }
+ 101   5                                                      else if(1 == flag_s5)
+ 102   5                                                      {
+ 103   6                                                              res = 0xc1; //s5第二次按下的返回值
+ 104   6                                                      } break;
+ 105   5                                                      
+ 106   5                                              case 3: 
+ 107   5                                                      ++ flag_s4;
+ 108   5                                                      flag_s4 &= 0x01;
+ 109   5                                                      if(0 == flag_s4)
+ 110   5                                                      {
+ 111   6                                                              res = 0xb0; //s4第一次按下的返回值
+ 112   6                                                      }
+ 113   5                                                      else if(1 == flag_s4)
+ 114   5                                                      {
+ 115   6                                                              res = 0xb1; //s4第二次按下的返回值
+ 116   6                                                      } break;                                                
+C51 COMPILER V9.54   KEY                                                                   03/27/2019 15:52:21 PAGE 3   
+
+ 117   5                                      }
+ 118   4                              }
+ 119   3               }
+ 120   2               backup[i] = keySta[i];  
+ 121   2          }
+ 122   1              return res;
+ 123   1      }
+ 124          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    225    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     16    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
